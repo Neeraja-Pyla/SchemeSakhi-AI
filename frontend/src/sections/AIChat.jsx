@@ -1,9 +1,15 @@
 
 import { useState } from 'react'
+import ReactMarkdown from 'react-markdown'
 
 const API_URL = (
   import.meta.env.VITE_API_URL || 'http://127.0.0.1:8001'
 ).replace(/\/$/, '')
+
+// Fix escaped Markdown characters returned by Gemini
+function cleanMarkdown(text) {
+  return text.replace(/\\([*_`])/g, '$1')
+}
 
 function AIChat() {
   const [question, setQuestion] = useState('')
@@ -96,7 +102,7 @@ function AIChat() {
             </p>
           </div>
 
-          <div className="bg-[#F8FAF7] p-5 space-y-4 min-h-[300px] max-h-[400px] overflow-y-auto">
+          <div className="bg-[#F8FAF7] p-5 space-y-4 min-h-[300px] max-h-[500px] overflow-y-auto">
             {messages.map((message, index) => (
               <div
                 key={index}
@@ -107,13 +113,70 @@ function AIChat() {
                 }`}
               >
                 <div
-                  className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+                  className={`max-w-[90%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
                     message.role === 'user'
                       ? 'bg-green-700 text-white'
                       : 'bg-white text-gray-700 border border-gray-100'
                   }`}
                 >
-                  {message.text}
+                  {message.role === 'assistant' ? (
+                    <div className="space-y-2 break-words">
+                      <ReactMarkdown
+                        components={{
+                          h1: ({ children }) => (
+                            <h1 className="text-lg font-bold mt-3 mb-2">
+                              {children}
+                            </h1>
+                          ),
+                          h2: ({ children }) => (
+                            <h2 className="text-base font-bold mt-3 mb-2">
+                              {children}
+                            </h2>
+                          ),
+                          h3: ({ children }) => (
+                            <h3 className="font-bold mt-3 mb-1">
+                              {children}
+                            </h3>
+                          ),
+                          p: ({ children }) => (
+                            <p className="mb-2">{children}</p>
+                          ),
+                          strong: ({ children }) => (
+                            <strong className="font-bold text-gray-900">
+                              {children}
+                            </strong>
+                          ),
+                          ul: ({ children }) => (
+                            <ul className="list-disc pl-5 mb-3 space-y-1">
+                              {children}
+                            </ul>
+                          ),
+                          ol: ({ children }) => (
+                            <ol className="list-decimal pl-5 mb-3 space-y-1">
+                              {children}
+                            </ol>
+                          ),
+                          li: ({ children }) => (
+                            <li className="pl-1">{children}</li>
+                          ),
+                          a: ({ href, children }) => (
+                            <a
+                              href={href}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-green-700 underline font-medium break-all"
+                            >
+                              {children}
+                            </a>
+                          ),
+                        }}
+                      >
+                        {cleanMarkdown(message.text)}
+                      </ReactMarkdown>
+                    </div>
+                  ) : (
+                    message.text
+                  )}
                 </div>
               </div>
             ))}
