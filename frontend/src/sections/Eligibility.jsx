@@ -1,6 +1,10 @@
 
 import { useState } from 'react'
 
+const API_URL = (
+  import.meta.env.VITE_API_URL || 'http://127.0.0.1:8001'
+).replace(/\/$/, '')
+
 function Eligibility() {
   const [formData, setFormData] = useState({
     state: '',
@@ -34,7 +38,7 @@ function Eligibility() {
 
     try {
       const response = await fetch(
-        'http://127.0.0.1:8001/check-eligibility',
+        `${API_URL}/check-eligibility`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

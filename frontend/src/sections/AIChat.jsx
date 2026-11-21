@@ -1,6 +1,10 @@
 
 import { useState } from 'react'
 
+const API_URL = (
+  import.meta.env.VITE_API_URL || 'http://127.0.0.1:8001'
+).replace(/\/$/, '')
+
 function AIChat() {
   const [question, setQuestion] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -19,28 +23,21 @@ function AIChat() {
 
     const userQuestion = question.trim()
 
-    // Display the user's message
     setMessages((previousMessages) => [
       ...previousMessages,
-      {
-        role: 'user',
-        text: userQuestion,
-      },
+      { role: 'user', text: userQuestion },
     ])
 
     setQuestion('')
     setIsLoading(true)
 
     try {
-      // Send the question to our Python backend
-      const response = await fetch('http://127.0.0.1:8001/chat', {
+      const response = await fetch(`${API_URL}/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          message: userQuestion,
-        }),
+        body: JSON.stringify({ message: userQuestion }),
       })
 
       const data = await response.json()
@@ -49,7 +46,6 @@ function AIChat() {
         throw new Error(data.detail || 'Something went wrong.')
       }
 
-      // Display Gemini's response
       setMessages((previousMessages) => [
         ...previousMessages,
         {
@@ -57,7 +53,6 @@ function AIChat() {
           text: data.reply || 'Sorry, I could not generate a response.',
         },
       ])
-
     } catch (error) {
       console.error('Chat Error:', error)
 
@@ -68,7 +63,6 @@ function AIChat() {
           text: `Sorry, something went wrong: ${error.message}`,
         },
       ])
-
     } finally {
       setIsLoading(false)
     }
@@ -77,7 +71,6 @@ function AIChat() {
   return (
     <section className="bg-white py-20 px-6" id="ai-assistant">
       <div className="max-w-4xl mx-auto">
-
         <div className="text-center mb-10">
           <p className="text-green-700 font-semibold text-sm">
             YOUR AI-POWERED GUIDE
@@ -93,18 +86,17 @@ function AIChat() {
         </div>
 
         <div className="border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
-
           <div className="bg-green-800 text-white p-5">
             <h3 className="font-semibold text-lg">
               💚 SchemeSakhi Assistant
             </h3>
+
             <p className="text-green-100 text-sm mt-1">
               English • తెలుగు
             </p>
           </div>
 
           <div className="bg-[#F8FAF7] p-5 space-y-4 min-h-[300px] max-h-[400px] overflow-y-auto">
-
             {messages.map((message, index) => (
               <div
                 key={index}
@@ -133,11 +125,9 @@ function AIChat() {
                 </div>
               </div>
             )}
-
           </div>
 
           <form onSubmit={handleSend} className="p-4 flex gap-3">
-
             <input
               type="text"
               value={question}
@@ -154,15 +144,12 @@ function AIChat() {
             >
               {isLoading ? 'Wait...' : 'Send'}
             </button>
-
           </form>
-
         </div>
 
         <p className="text-center text-xs text-gray-400 mt-4">
           AI-generated guidance should be checked against official scheme sources.
         </p>
-
       </div>
     </section>
   )
