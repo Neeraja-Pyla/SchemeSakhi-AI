@@ -6,8 +6,28 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from google import genai
+
 from scheme_data import SCHEME_KNOWLEDGE
 from eligibility import check_pm_kisan_eligibility
+
+
+# Load environment variables
+load_dotenv()
+
+api_key = os.getenv("GEMINI_API_KEY")
+
+# Local frontend addresses
+allowed_origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+
+# Add deployed Vercel frontend address when configured
+frontend_url = os.getenv("FRONTEND_URL", "").strip().rstrip("/")
+
+if frontend_url:
+    allowed_origins.append(frontend_url)
+
 
 print("TOTAL SCHEMES LOADED:", len(SCHEME_KNOWLEDGE))
 
@@ -15,10 +35,6 @@ for scheme in SCHEME_KNOWLEDGE:
     print("SCHEME:", scheme["name"])
     print("KEYWORDS:", scheme["keywords"])
 
-# Load secret API key from .env
-load_dotenv()
-
-api_key = os.getenv("GEMINI_API_KEY")
 
 # Create FastAPI application
 app = FastAPI(
@@ -27,19 +43,18 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Allow React frontend to communicate with Python backend
+
+# Allow local and deployed React frontend to communicate
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173"
-    ],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Define the format of incoming chat messages
+
+# Define incoming request formats
 class ChatRequest(BaseModel):
     message: str
 
@@ -55,7 +70,7 @@ class EligibilityRequest(BaseModel):
     professional: str
 
 
-
+# Backend health check
 @app.get("/")
 def home():
     return {
@@ -71,11 +86,11 @@ def chat(request: ChatRequest):
     if not api_key:
         raise HTTPException(
             status_code=500,
-            detail="Gemini API key is missing. Check your .env file."
+            detail="Gemini API key is missing. Check your environment settings."
         )
 
     try:
-        # Find scheme information related to the user's question
+        # Find matching scheme information
         user_question = request.message.lower()
 
         matched_schemes = [
@@ -86,8 +101,13 @@ def chat(request: ChatRequest):
                 for keyword in scheme["keywords"]
             )
         ]
+
         print("USER QUESTION:", request.message)
-        print("MATCHED SCHEMES:", [scheme["name"] for scheme in matched_schemes])
+        print(
+            "MATCHED SCHEMES:",
+            [scheme["name"] for scheme in matched_schemes]
+        )
+
         # Prepare verified information for Gemini
         knowledge_context = ""
 
@@ -102,9 +122,9 @@ def chat(request: ChatRequest):
                 f"Source name: {scheme['source_name']}\n"
                 f"Last verified: {scheme['last_verified']}\n"
             )
+
         client = genai.Client(api_key=api_key)
 
-        
         prompt = f"""
 You are SchemeSakhi AI, a helpful Indian government scheme guide.
 
@@ -147,10 +167,12 @@ USER QUESTION:
         print("GEMINI ERROR:", repr(error), flush=True)
 
         raise HTTPException(
-        status_code=502,
-        detail=str(error)
-    )
+            status_code=502,
+            detail=str(error)
+        )
 
+
+# PM-KISAN eligibility endpoint
 @app.post("/check-eligibility")
 def check_eligibility(request: EligibilityRequest):
 
@@ -158,4 +180,4 @@ def check_eligibility(request: EligibilityRequest):
         request.model_dump()
     )
 
-    return result   
+    return result
