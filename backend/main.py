@@ -10,24 +10,20 @@ from google import genai
 from scheme_data import SCHEME_KNOWLEDGE
 from eligibility import check_pm_kisan_eligibility
 
-
-# Load environment variables
 load_dotenv()
 
 api_key = os.getenv("GEMINI_API_KEY")
 
-# Local frontend addresses
 allowed_origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "http://localhost:5174",
+    "http://127.0.0.1:5174",
 ]
-
-# Add deployed Vercel frontend address when configured
 frontend_url = os.getenv("FRONTEND_URL", "").strip().rstrip("/")
 
 if frontend_url:
     allowed_origins.append(frontend_url)
-
 
 print("TOTAL SCHEMES LOADED:", len(SCHEME_KNOWLEDGE))
 
@@ -36,15 +32,12 @@ for scheme in SCHEME_KNOWLEDGE:
     print("KEYWORDS:", scheme["keywords"])
 
 
-# Create FastAPI application
 app = FastAPI(
     title="SchemeSakhi AI",
     description="Multilingual Government Scheme Assistant",
     version="1.0.0"
 )
 
-
-# Allow local and deployed React frontend to communicate
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
@@ -54,7 +47,6 @@ app.add_middleware(
 )
 
 
-# Define incoming request formats
 class ChatRequest(BaseModel):
     message: str
 
@@ -68,9 +60,9 @@ class EligibilityRequest(BaseModel):
     incomeTax: str
     pension: str
     professional: str
+    nri: str = "unsure"
 
 
-# Backend health check
 @app.get("/")
 def home():
     return {
@@ -79,7 +71,6 @@ def home():
     }
 
 
-# Gemini AI chat endpoint
 @app.post("/chat")
 def chat(request: ChatRequest):
 
@@ -90,7 +81,6 @@ def chat(request: ChatRequest):
         )
 
     try:
-        # Find matching scheme information
         user_question = request.message.lower()
 
         matched_schemes = [
@@ -102,13 +92,6 @@ def chat(request: ChatRequest):
             )
         ]
 
-        print("USER QUESTION:", request.message)
-        print(
-            "MATCHED SCHEMES:",
-            [scheme["name"] for scheme in matched_schemes]
-        )
-
-        # Prepare verified information for Gemini
         knowledge_context = ""
 
         for scheme in matched_schemes:
@@ -128,22 +111,16 @@ def chat(request: ChatRequest):
         prompt = f"""
 You are SchemeSakhi AI, a helpful Indian government scheme guide.
 
-Your job is to explain government schemes in simple language.
-
-IMPORTANT RULES:
-
+Rules:
 1. Reply in the same language used by the user.
 2. Support English and Telugu.
-3. Use the verified scheme information provided below.
+3. Use the verified information provided below.
 4. Never invent eligibility rules, benefits, deadlines,
    documents or official links.
-5. If verified information is insufficient, clearly say so.
-6. For scheme-specific questions without matching verified
-   information, explain that the information is not yet
-   available in your knowledge base.
-7. Never claim to officially approve someone's eligibility.
-8. Include the official source when relevant.
-9. For greetings or general questions, respond naturally.
+5. If information is insufficient, clearly say so.
+6. Never claim to officially approve eligibility.
+7. Include official sources when relevant.
+8. For general greetings, respond naturally.
 
 VERIFIED SCHEME INFORMATION:
 
@@ -159,25 +136,18 @@ USER QUESTION:
             contents=prompt
         )
 
-        return {
-            "reply": response.text
-        }
+        return {"reply": response.text}
 
     except Exception as error:
         print("GEMINI ERROR:", repr(error), flush=True)
 
         raise HTTPException(
             status_code=502,
-            detail=str(error)
+            detail="Unable to generate a response right now. Please try again."
         )
 
 
-# PM-KISAN eligibility endpoint
 @app.post("/check-eligibility")
 def check_eligibility(request: EligibilityRequest):
-
-    result = check_pm_kisan_eligibility(
-        request.model_dump()
-    )
-
+    result = check_pm_kisan_eligibility(request.model_dump())
     return result

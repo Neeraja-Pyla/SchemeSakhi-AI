@@ -63,6 +63,7 @@ function Eligibility() {
   const [formData, setFormData] = useState({
     state: '',
     land: '',
+    nri: '',
     institutional: '',
     publicOffice: '',
     governmentEmployee: '',
@@ -136,6 +137,11 @@ function Eligibility() {
   ]
 
   const questions = [
+    {
+      name: 'nri',
+      label:
+        'Is the landholding farmer family an NRI under the Income Tax Act?',
+    },
     {
       name: 'institutional',
       label:

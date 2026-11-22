@@ -1,6 +1,5 @@
 
 def check_pm_kisan_eligibility(data):
-
     checks = []
     excluded = False
     needs_review = False
@@ -20,17 +19,19 @@ def check_pm_kisan_eligibility(data):
             needs_review = True
 
     # 1. Agricultural land
-    if data["land"] == "yes":
+    land = data.get("land", "unsure")
+
+    if land == "yes":
         add_check(
             "Agricultural land",
             "met",
-            "You reported that your farmer family owns cultivable agricultural land."
+            "You reported that your farmer family owns cultivable agricultural land. Official land records must still be verified."
         )
-    elif data["land"] == "no":
+    elif land == "no":
         add_check(
             "Agricultural land",
             "not_met",
-            "The scheme requires a landholding farmer family."
+            "You reported that your farmer family does not own cultivable agricultural land."
         )
     else:
         add_check(
@@ -40,53 +41,69 @@ def check_pm_kisan_eligibility(data):
         )
 
     # 2. Institutional landholding
-    if data["institutional"] == "yes":
+    institutional = data.get("institutional", "unsure")
+
+    if institutional == "yes":
         add_check(
             "Institutional landholding",
             "not_met",
-            "Institutional landholders are excluded."
+            "Institutional landholders are excluded under PM-KISAN."
         )
-    elif data["institutional"] == "no":
-        add_check("Institutional landholding", "met",
-                  "No institutional landholding reported.")
+    elif institutional == "no":
+        add_check(
+            "Institutional landholding",
+            "met",
+            "You reported no institutional landholding."
+        )
     else:
-        add_check("Institutional landholding", "unknown",
-                  "Institutional landholding needs verification.")
+        add_check(
+            "Institutional landholding",
+            "unknown",
+            "Institutional landholding needs verification."
+        )
 
-    # 3. Constitutional posts and specified public representatives
-    if data["publicOffice"] == "yes":
+    # 3. Specified public office
+    public_office = data.get("publicOffice", "unsure")
+
+    if public_office == "yes":
         add_check(
             "Specified public office",
             "not_met",
-            "Specified constitutional post holders and public representatives are excluded."
+            "You reported a family member in a specified constitutional post or elected public representative category. Verify the exact category against official rules."
         )
-    elif data["publicOffice"] == "no":
-        add_check("Specified public office", "met",
-                  "No specified public office reported.")
+    elif public_office == "no":
+        add_check(
+            "Specified public office",
+            "met",
+            "You reported no specified public office held by a family member."
+        )
     else:
-        add_check("Specified public office", "unknown",
-                  "Public office status needs verification.")
+        add_check(
+            "Specified public office",
+            "unknown",
+            "Public office status needs verification."
+        )
 
     # 4. Government employment
-    employee = data["governmentEmployee"]
+    employee = data.get("governmentEmployee", "unsure")
 
     if employee == "regular":
         add_check(
             "Government employment",
             "not_met",
-            "Specified serving or retired government employees are excluded."
+            "You reported regular government employment. Specified serving or retired government employees are excluded. Verify the exact employment category."
         )
     elif employee == "mts":
         add_check(
             "Government employment",
             "met",
-            "MTS / Class IV / Group D employees are exempt from this exclusion."
+            "MTS / Class IV / Group D employees are exempt from this specified employment exclusion."
         )
     elif employee == "no":
         add_check(
             "Government employment",
             "met",
-            "No specified government employment reported."
+            "You reported no specified government employment."
         )
     else:
         add_check(
@@ -96,59 +113,118 @@ def check_pm_kisan_eligibility(data):
         )
 
     # 5. Income tax
-    if data["incomeTax"] == "yes":
+    income_tax = data.get("incomeTax", "unsure")
+
+    if income_tax == "yes":
         add_check(
             "Income tax",
             "not_met",
-            "Persons who paid income tax in the last assessment year are excluded."
+            "You reported income tax payment in the last assessment year. This is an exclusion condition under PM-KISAN."
         )
-    elif data["incomeTax"] == "no":
-        add_check("Income tax", "met",
-                  "No income tax payment reported for the last assessment year.")
+    elif income_tax == "no":
+        add_check(
+            "Income tax",
+            "met",
+            "You reported no income tax payment in the last assessment year."
+        )
     else:
-        add_check("Income tax", "unknown",
-                  "Income tax status needs verification.")
+        add_check(
+            "Income tax",
+            "unknown",
+            "Income tax status needs verification."
+        )
 
-    # 6. Pension
-    if data["pension"] == "yes":
+    # 6. Government pension
+    pension = data.get("pension", "unsure")
+
+    if pension == "yes" and employee == "mts":
+        add_check(
+            "Government pension",
+            "met",
+            "The MTS / Class IV / Group D category is exempt from the specified pension exclusion. Official service and pension records still need verification."
+        )
+    elif pension == "yes":
         add_check(
             "Government pension",
             "not_met",
-            "A specified retired government employee receives a pension of ₹10,000 or more per month."
+            "You reported a monthly government pension of ₹10,000 or more. This may fall under the exclusion for specified retired government employees."
         )
-    elif data["pension"] == "no":
-        add_check("Government pension", "met",
-                  "No applicable pension exclusion reported.")
+    elif pension == "no":
+        add_check(
+            "Government pension",
+            "met",
+            "You reported no government pension of ₹10,000 or more per month."
+        )
     else:
-        add_check("Government pension", "unknown",
-                  "Pension category and amount need verification.")
+        add_check(
+            "Government pension",
+            "unknown",
+            "Pension amount and former employment category need verification."
+        )
 
     # 7. Practising registered professionals
-    if data["professional"] == "yes":
+    professional = data.get("professional", "unsure")
+
+    if professional == "yes":
         add_check(
             "Registered professional",
             "not_met",
-            "Specified practising registered professionals are excluded."
+            "You reported an actively practising registered professional in the family. Specified practising professionals are excluded."
         )
-    elif data["professional"] == "no":
-        add_check("Registered professional", "met",
-                  "No specified practising professional reported.")
+    elif professional == "no":
+        add_check(
+            "Registered professional",
+            "met",
+            "You reported no specified actively practising registered professional."
+        )
     else:
-        add_check("Registered professional", "unknown",
-                  "Professional status needs verification.")
+        add_check(
+            "Registered professional",
+            "unknown",
+            "Professional registration and practising status need verification."
+        )
 
-    # Final result
+    # 8. NRI status
+    nri = data.get("nri", "unsure")
+
+    if nri == "yes":
+        add_check(
+            "NRI status",
+            "not_met",
+            "NRI farmer families are excluded from benefits for new beneficiaries under PM-KISAN."
+        )
+    elif nri == "no":
+        add_check(
+            "NRI status",
+            "met",
+            "You reported that the farmer family is not an NRI family."
+        )
+    else:
+        add_check(
+            "NRI status",
+            "unknown",
+            "NRI status needs verification under the applicable Income Tax Act provisions."
+        )
+
+    # Final assessment
     if excluded:
         result = "not_likely_eligible"
-        summary = "One or more exclusion conditions were reported."
-
+        summary = (
+            "One or more answers indicate a possible exclusion condition. "
+            "Review the reasons and verify them with official authorities."
+        )
     elif needs_review:
         result = "needs_verification"
-        summary = "Some answers need verification before assessing eligibility."
-
+        summary = (
+            "Some answers are uncertain. Verify the relevant records "
+            "before relying on this preliminary assessment."
+        )
     else:
         result = "potentially_eligible"
-        summary = "Your answers meet the basic conditions checked. Official verification is still required."
+        summary = (
+            "Your answers meet the basic conditions checked by this tool. "
+            "Other scheme requirements and government verification still apply."
+        )
 
     return {
         "scheme": "PM-KISAN Samman Nidhi",
@@ -156,5 +232,10 @@ def check_pm_kisan_eligibility(data):
         "summary": summary,
         "checks": checks,
         "official_source": "https://pmkisan.gov.in/",
-        "disclaimer": "This is an informational pre-check, not an official eligibility decision."
+        "disclaimer": (
+            "This is an informational pre-check, not an official eligibility "
+            "decision. It does not verify government databases, land records, "
+            "or every scheme condition. Final eligibility is determined by "
+            "the competent government authorities."
+        )
     }
