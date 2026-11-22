@@ -37,14 +37,11 @@ function Eligibility() {
     setError('')
 
     try {
-      const response = await fetch(
-        `${API_URL}/check-eligibility`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData),
-        }
-      )
+      const response = await fetch(`${API_URL}/check-eligibility`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      })
 
       const data = await response.json()
 
@@ -66,33 +63,45 @@ function Eligibility() {
   const questions = [
     {
       name: 'institutional',
-      label: 'Is the agricultural land held by an institution rather than an individual farmer family?',
+      label:
+        'Is the agricultural land held by an institution rather than an individual farmer family?',
     },
     {
       name: 'publicOffice',
-      label: 'Does any family member fall under a specified constitutional post or elected public representative category?',
+      label:
+        'Does any family member fall under a specified constitutional post or elected public representative category?',
     },
     {
       name: 'governmentEmployee',
-      label: 'What is the government employment status of any family member?',
+      label:
+        'What is the government employment status of any family member?',
       options: [
         { value: 'no', label: 'No government employment' },
-        { value: 'regular', label: 'Regular government employee / officer' },
-        { value: 'mts', label: 'MTS / Class IV / Group D employee' },
+        {
+          value: 'regular',
+          label: 'Regular government employee / officer',
+        },
+        {
+          value: 'mts',
+          label: 'MTS / Class IV / Group D employee',
+        },
         { value: 'unsure', label: 'Not sure' },
       ],
     },
     {
       name: 'incomeTax',
-      label: 'Has any family member paid income tax in the last assessment year?',
+      label:
+        'Has any family member paid income tax in the last assessment year?',
     },
     {
       name: 'pension',
-      label: 'Does any family member receive a monthly government pension of ₹10,000 or more?',
+      label:
+        'Does any family member receive a monthly government pension of ₹10,000 or more?',
     },
     {
       name: 'professional',
-      label: 'Is any family member an actively practising registered professional, such as a doctor, lawyer, CA or architect?',
+      label:
+        'Is any family member an actively practising registered professional, such as a doctor, lawyer, CA or architect?',
     },
   ]
 
@@ -179,8 +188,14 @@ function Eligibility() {
               Select Scheme
             </label>
 
-            <select className={selectClass} value="PM-KISAN" disabled>
-              <option value="PM-KISAN">PM-KISAN Samman Nidhi</option>
+            <select
+              className={selectClass}
+              value="PM-KISAN"
+              onChange={() => {}}
+            >
+              <option value="PM-KISAN">
+                PM-KISAN Samman Nidhi
+              </option>
             </select>
           </div>
 
@@ -207,7 +222,8 @@ function Eligibility() {
 
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Does your farmer family own cultivable agricultural land recorded in the state's land records?
+              Does your farmer family own cultivable agricultural land
+              recorded in the state's land records?
             </label>
 
             <select
@@ -269,10 +285,13 @@ function Eligibility() {
                   Your Eligibility Assessment
                 </h3>
 
-                <div className={`mt-3 rounded-lg border p-4 ${getOverallStyle(result.result)}`}>
+                <div
+                  className={`mt-3 rounded-lg border p-4 ${getOverallStyle(result.result)}`}
+                >
                   <p className="font-bold">
                     {getOverallLabel(result.result)}
                   </p>
+
                   <p className="text-sm mt-2">{result.summary}</p>
                 </div>
 
@@ -281,18 +300,23 @@ function Eligibility() {
                 </h4>
 
                 {result.checks?.map((check, index) => (
-                  <div key={index} className="border-t border-gray-100 py-3">
+                  <div
+                    key={index}
+                    className="border-t border-gray-100 py-3"
+                  >
                     <div className="flex justify-between items-start gap-3">
                       <p className="font-medium text-sm text-gray-800">
                         {check.condition}
                       </p>
 
-                      <span className={`text-xs font-semibold rounded-full px-3 py-1 whitespace-nowrap ${getStatusStyle(check.status)}`}>
+                      <span
+                        className={`text-xs font-semibold rounded-full px-3 py-1 whitespace-nowrap ${getStatusStyle(check.status)}`}
+                      >
                         {check.status === 'met'
                           ? 'Passed'
                           : check.status === 'not_met'
-                          ? 'Failed'
-                          : 'Review'}
+                            ? 'Failed'
+                            : 'Review'}
                       </span>
                     </div>
 
@@ -309,16 +333,18 @@ function Eligibility() {
                 </h3>
 
                 <ol className="mt-3 space-y-3">
-                  {(nextSteps[result.result] || nextSteps.needs_verification).map(
-                    (step, index) => (
-                      <li key={index} className="flex gap-3 text-sm text-gray-700">
-                        <span className="font-bold text-blue-700">
-                          {index + 1}.
-                        </span>
-                        <span>{step}</span>
-                      </li>
-                    )
-                  )}
+                  {(nextSteps[result.result] ||
+                    nextSteps.needs_verification).map((step, index) => (
+                    <li
+                      key={index}
+                      className="flex gap-3 text-sm text-gray-700"
+                    >
+                      <span className="font-bold text-blue-700">
+                        {index + 1}.
+                      </span>
+                      <span>{step}</span>
+                    </li>
+                  ))}
                 </ol>
               </div>
 
@@ -334,7 +360,10 @@ function Eligibility() {
 
                 <ul className="mt-4 space-y-3">
                   {documents.map((document, index) => (
-                    <li key={index} className="flex gap-3 text-sm text-gray-700">
+                    <li
+                      key={index}
+                      className="flex gap-3 text-sm text-gray-700"
+                    >
                       <span className="text-green-700 font-bold">✓</span>
                       {document}
                     </li>
